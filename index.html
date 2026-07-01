@@ -188,7 +188,7 @@
 </div>
 
 <h1>London <em>→</em> Singapore</h1>
-<div class="subline">MON 21 SEP 2026 · 17:10 UTC</div>
+<div class="subline">TUE 22 SEP 2026 · 00:10 SGT</div>
 
 <div class="board-wrap" id="boardWrap">
   <div class="board" id="board">
@@ -210,9 +210,11 @@
 <div class="status" id="status">STATUS: SCHEDULED</div>
 
 <script>
-  // Target arrival — 17:10 UTC, Mon 21 Sep 2026. Edit this one line if the intended
-  // time zone is different (e.g. add +08:00 for Singapore local, or +01:00 for BST).
-  const TARGET = new Date("2026-09-21T17:10:00Z");
+  // Target arrival — 17:10 UK local clock time on Mon 21 Sep 2026.
+  // The UK is on BST (UTC+1) at that date (GMT doesn't resume until the clocks
+  // change on 25 Oct 2026), so 17:10 local = 16:10 UTC = 00:10 SGT, Tue 22 Sep —
+  // matching the flight confirmation.
+  const TARGET = new Date("2026-09-21T16:10:00Z");
   const START  = new Date("2026-07-02T00:00:00Z"); // rough trip-window start, for the plane's position
 
   const dEl = document.getElementById('d');
@@ -231,11 +233,17 @@
   function pad(n){ return String(n).padStart(2,'0'); }
   function fmt(n){ return n.toLocaleString('en-GB'); }
 
-  // Calendar-day gap between two dates (ignores time-of-day) — used for "sleeps".
+  // Calendar-day gap between two dates, counted in the browser's local timezone,
+  // with the day boundary set to 6am rather than midnight — a "sleep" only
+  // decrements once you've woken up, not at the stroke of midnight.
+  const SLEEP_DAY_START_HOUR = 6;
   function calendarDayGap(a, b){
-    const ua = Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate());
-    const ub = Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate());
-    return Math.round((ub - ua) / 86400000);
+    const offsetMs = SLEEP_DAY_START_HOUR * 3600000;
+    const sa = new Date(a.getTime() - offsetMs);
+    const sb = new Date(b.getTime() - offsetMs);
+    const da = new Date(sa.getFullYear(), sa.getMonth(), sa.getDate());
+    const db = new Date(sb.getFullYear(), sb.getMonth(), sb.getDate());
+    return Math.round((db - da) / 86400000);
   }
 
   // Count Sundays strictly between now and the target date (inclusive of target).
@@ -261,7 +269,7 @@
       document.querySelector('.subline').style.display = 'none';
       document.getElementById('manifest').style.display = 'none';
       status.style.display = 'none';
-      boardWrap.innerHTML = '<div class="arrived"><h1>Touchdown. <em>She\\'s there.</em></h1><div class="subline">Welcome to Singapore.</div></div>';
+      boardWrap.innerHTML = `<div class="arrived"><h1>Touchdown. <em>She's there.</em></h1><div class="subline">Welcome to Singapore.</div></div>`;
       return;
     }
 
@@ -292,7 +300,7 @@
     const pct = Math.min(100, Math.max(0, (elapsed/totalSpan)*100));
     plane.style.left = pct + '%';
 
-    if(days === 0 && hrs < 24) status.textContent = 'STATUS: FINAL APPROACH';
+    if(days === 0) status.textContent = 'STATUS: FINAL APPROACH';
     else if(days <= 3) status.textContent = 'STATUS: BOARDING SOON';
     else status.textContent = 'STATUS: SCHEDULED';
   }
