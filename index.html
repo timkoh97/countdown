@@ -14,6 +14,10 @@
     --ink:#F2EFE9;
     --muted:#7C8AA5;
     --line:#22304A;
+
+    --card-w: clamp(30px, 8vw, 50px);
+    --card-h: clamp(46px, 12vw, 78px);
+    --card-font: clamp(1.5rem, 6.5vw, 2.8rem);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -22,17 +26,18 @@
     color:var(--ink);
     font-family:'IBM Plex Mono', monospace;
     min-height:100vh;
+    min-height:100dvh;
     display:flex;
     flex-direction:column;
     align-items:center;
-    padding:6vh 5vw;
+    padding:5vh 5vw;
   }
 
   /* Route line */
   .route{
     width:100%;
     max-width:520px;
-    margin-bottom:5vh;
+    margin-bottom:4vh;
   }
   .route-labels{
     display:flex;
@@ -64,7 +69,8 @@
     position:absolute;
     top:50%;
     transform:translate(-50%,-50%);
-    font-size:0.85rem;
+    font-size:2rem;
+    line-height:1;
     color:var(--gold);
     transition:left 1s linear;
   }
@@ -87,7 +93,42 @@
     font-size:0.85rem;
     letter-spacing:0.08em;
     text-align:center;
-    margin-bottom:6vh;
+    margin-bottom:3vh;
+  }
+
+  /* Live city clocks — deliberately understated so the counter stays the focal point */
+  .clocks{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-top:3vh;
+    margin-bottom:4vh;
+  }
+  .clock-item{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+  }
+  .clock-city{
+    font-size:0.6rem;
+    letter-spacing:0.18em;
+    color:var(--muted);
+  }
+  .clock-time{
+    font-size:0.85rem;
+    font-variant-numeric:tabular-nums;
+    color:var(--ink);
+    letter-spacing:0.03em;
+  }
+  .clock-meta{
+    font-size:0.62rem;
+    letter-spacing:0.08em;
+    color:var(--muted);
+  }
+  .clock-sep{
+    color:var(--line);
+    font-size:1rem;
   }
 
   /* Split-flap board */
@@ -100,30 +141,16 @@
   }
   .board{
     display:flex;
-    gap:clamp(10px, 2.5vw, 28px);
+    gap:clamp(10px, 3vw, 22px);
   }
   .unit{
     display:flex;
     flex-direction:column;
     align-items:center;
   }
-  .flip{
-    background:var(--bg2);
-    border:1px solid var(--line);
-    border-radius:6px;
-    padding:0.4em 0;
-    width:clamp(56px, 12vw, 92px);
-    text-align:center;
-    font-size:clamp(1.8rem, 6vw, 3.2rem);
-    font-weight:600;
-    color:var(--ink);
-    letter-spacing:0.02em;
-    font-variant-numeric:tabular-nums;
-    box-shadow:0 1px 0 rgba(255,255,255,0.04) inset, 0 6px 16px rgba(0,0,0,0.35);
-    transition:color 0.3s ease;
-  }
-  .flip.tick{
-    color:var(--gold);
+  .digit-group{
+    display:flex;
+    gap:3px;
   }
   .unit-label{
     margin-top:10px;
@@ -132,39 +159,102 @@
     color:var(--muted);
   }
 
-  .status{
-    margin-top:4vh;
-    font-size:0.75rem;
-    letter-spacing:0.25em;
-    color:var(--gold);
-    border-top:1px solid var(--line);
-    padding-top:1.2em;
+  .flip-card{
+    position:relative;
+    width:var(--card-w);
+    height:var(--card-h);
+    font-size:var(--card-font);
+    font-weight:600;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+    perspective:240px;
+  }
+  .flip-card .face,
+  .flip-card .leaf{
+    position:absolute;
+    left:0;
+    width:100%;
+    height:50%;
+    overflow:hidden;
+    background:var(--bg2);
+    box-shadow:0 1px 0 rgba(255,255,255,0.04) inset;
+  }
+  .flip-card .face.top,
+  .flip-card .leaf.top{
+    top:0;
+    border-radius:6px 6px 0 0;
+    border-bottom:1px solid rgba(0,0,0,0.35);
+  }
+  .flip-card .face.bottom,
+  .flip-card .leaf.bottom{
+    bottom:0;
+    border-radius:0 0 6px 6px;
+  }
+  .flip-card .digit-text{
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    height:var(--card-h);
+    line-height:var(--card-h);
     text-align:center;
+    color:inherit;
+  }
+  .flip-card .bottom .digit-text{
+    top:calc(var(--card-h) / -2);
+  }
+  .flip-card .leaf{
+    z-index:2;
+    backface-visibility:hidden;
+    transition:transform 0.22s cubic-bezier(0.45,0,0.55,1);
+  }
+  .flip-card .leaf.top{
+    transform-origin:bottom;
+    transform:rotateX(0deg);
+    z-index:3;
+  }
+  .flip-card .leaf.bottom{
+    transform-origin:top;
+    transform:rotateX(90deg);
+    transition-delay:0.11s;
+  }
+  .flip-card.flipping .leaf.top{
+    transform:rotateX(-90deg);
+  }
+  .flip-card.flipping .leaf.bottom{
+    transform:rotateX(0deg);
+  }
+  .flip-card.no-transition .leaf{
+    transition:none !important;
   }
 
   .manifest{
     display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(88px, 1fr));
+    grid-template-columns:repeat(auto-fit, minmax(100px, 1fr));
     gap:1px;
     background:var(--line);
     margin-top:4vh;
-    max-width:560px;
+    max-width:680px;
     width:100%;
   }
   .manifest-item{
     background:var(--bg);
-    padding:1.1em 0.6em;
+    padding:1.4em 0.8em;
     text-align:center;
   }
   .manifest-num{
-    font-size:clamp(1rem, 2.6vw, 1.5rem);
+    font-size:clamp(1rem, 2.6vw, 1.4rem);
     font-weight:600;
     font-variant-numeric:tabular-nums;
     color:var(--ink);
     letter-spacing:0.02em;
   }
+  .manifest-num.long{
+    font-size:clamp(0.72rem, 1.8vw, 1rem);
+    letter-spacing:0;
+  }
   .manifest-label{
-    margin-top:6px;
+    margin-top:8px;
     font-size:0.6rem;
     letter-spacing:0.16em;
     color:var(--muted);
@@ -175,8 +265,22 @@
   }
   .arrived h1{ font-size:clamp(2rem,6vw,3rem); }
 
+  @media (max-width:480px){
+    .manifest{
+      grid-template-columns:repeat(3, 1fr);
+      max-width:100%;
+    }
+    .manifest-item{
+      padding:1.1em 0.4em;
+    }
+    .clocks{
+      gap:12px;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce){
     .plane{ transition:none; }
+    .flip-card .leaf{ transition:none; }
   }
 </style>
 </head>
@@ -190,12 +294,18 @@
 <h1>London <em>→</em> Singapore</h1>
 <div class="subline">TUE 22 SEP 2026 · 00:10 SGT</div>
 
+<div class="clocks">
+  <div class="clock-item"><span class="clock-city">LONDON</span><span class="clock-time" id="clockLon">--:--:--</span><span class="clock-meta" id="clockLonMeta">-- · --</span></div>
+  <div class="clock-sep">·</div>
+  <div class="clock-item"><span class="clock-city">SINGAPORE</span><span class="clock-time" id="clockSin">--:--:--</span><span class="clock-meta" id="clockSinMeta">-- · --</span></div>
+</div>
+
 <div class="board-wrap" id="boardWrap">
   <div class="board" id="board">
-    <div class="unit"><div class="flip" id="d">00</div><div class="unit-label">DAYS</div></div>
-    <div class="unit"><div class="flip" id="h">00</div><div class="unit-label">HRS</div></div>
-    <div class="unit"><div class="flip" id="m">00</div><div class="unit-label">MIN</div></div>
-    <div class="unit"><div class="flip" id="s">00</div><div class="unit-label">SEC</div></div>
+    <div class="unit"><div class="digit-group" id="grp-days"></div><div class="unit-label">DAYS</div></div>
+    <div class="unit"><div class="digit-group" id="grp-hrs"></div><div class="unit-label">HRS</div></div>
+    <div class="unit"><div class="digit-group" id="grp-min"></div><div class="unit-label">MIN</div></div>
+    <div class="unit"><div class="digit-group" id="grp-sec"></div><div class="unit-label">SEC</div></div>
   </div>
 </div>
 
@@ -203,11 +313,10 @@
   <div class="manifest-item"><div class="manifest-num" id="mDays">0</div><div class="manifest-label">DAYS</div></div>
   <div class="manifest-item"><div class="manifest-num" id="mSleeps">0</div><div class="manifest-label">SLEEPS</div></div>
   <div class="manifest-item"><div class="manifest-num" id="mSundays">0</div><div class="manifest-label">SUNDAYS</div></div>
-  <div class="manifest-item"><div class="manifest-num" id="mMinutes">0</div><div class="manifest-label">MINUTES</div></div>
-  <div class="manifest-item"><div class="manifest-num" id="mSeconds">0</div><div class="manifest-label">SECONDS</div></div>
+  <div class="manifest-item"><div class="manifest-num" id="mHours">0</div><div class="manifest-label">HOURS</div></div>
+  <div class="manifest-item"><div class="manifest-num long" id="mMinutes">0</div><div class="manifest-label">MINUTES</div></div>
+  <div class="manifest-item"><div class="manifest-num long" id="mSeconds">0</div><div class="manifest-label">SECONDS</div></div>
 </div>
-
-<div class="status" id="status">STATUS: SCHEDULED</div>
 
 <script>
   // Target arrival — 17:10 UK local clock time on Mon 21 Sep 2026.
@@ -215,23 +324,41 @@
   // change on 25 Oct 2026), so 17:10 local = 16:10 UTC = 00:10 SGT, Tue 22 Sep —
   // matching the flight confirmation.
   const TARGET = new Date("2026-09-21T16:10:00Z");
-  const START  = new Date("2026-07-02T00:00:00Z"); // rough trip-window start, for the plane's position
+  const START  = new Date("2026-06-29T00:00:00Z"); // the day she flew from the UK to Singapore
 
-  const dEl = document.getElementById('d');
-  const hEl = document.getElementById('h');
-  const mEl = document.getElementById('m');
-  const sEl = document.getElementById('s');
   const plane = document.getElementById('plane');
-  const status = document.getElementById('status');
   const boardWrap = document.getElementById('boardWrap');
+  const clockLon = document.getElementById('clockLon');
+  const clockSin = document.getElementById('clockSin');
+  const clockLonMeta = document.getElementById('clockLonMeta');
+  const clockSinMeta = document.getElementById('clockSinMeta');
   const mDays = document.getElementById('mDays');
   const mSleeps = document.getElementById('mSleeps');
   const mSundays = document.getElementById('mSundays');
+  const mHours = document.getElementById('mHours');
   const mMinutes = document.getElementById('mMinutes');
   const mSeconds = document.getElementById('mSeconds');
 
   function pad(n){ return String(n).padStart(2,'0'); }
   function fmt(n){ return n.toLocaleString('en-GB'); }
+
+  function cityTime(zone){
+    return new Date().toLocaleTimeString('en-GB', { timeZone: zone, hour12:false });
+  }
+
+  function cityDate(zone){
+    return new Date().toLocaleDateString('en-GB', { timeZone: zone, weekday:'short', day:'numeric', month:'short' });
+  }
+
+  // London's offset changes with BST/GMT, so its abbreviation is read live from
+  // the browser. Singapore never observes DST (always UTC+8), so "SGT" is
+  // hardcoded — the browser's own data only offers "GMT+8", which is less
+  // familiar and no more accurate.
+  function londonTzAbbr(){
+    const parts = new Intl.DateTimeFormat('en-GB', { timeZone:'Europe/London', timeZoneName:'short' }).formatToParts(new Date());
+    const tz = parts.find(p => p.type === 'timeZoneName');
+    return tz ? tz.value : 'UK';
+  }
 
   // Calendar-day gap between two dates, counted in the browser's local timezone,
   // with the day boundary set to 6am rather than midnight — a "sleep" only
@@ -259,6 +386,76 @@
     return count;
   }
 
+  // ---- Split-flap digit cards ----
+
+  function createDigitCards(containerId, count){
+    const group = document.getElementById(containerId);
+    const cards = [];
+    for(let i=0;i<count;i++){
+      const cardEl = document.createElement('div');
+      cardEl.className = 'flip-card';
+      cardEl.innerHTML =
+        '<div class="face top"><span class="digit-text">0</span></div>' +
+        '<div class="face bottom"><span class="digit-text">0</span></div>' +
+        '<div class="leaf top"><span class="digit-text">0</span></div>' +
+        '<div class="leaf bottom"><span class="digit-text">0</span></div>';
+      group.appendChild(cardEl);
+      cards.push({
+        el: cardEl,
+        faceTop: cardEl.querySelector('.face.top .digit-text'),
+        faceBottom: cardEl.querySelector('.face.bottom .digit-text'),
+        leafTop: cardEl.querySelector('.leaf.top .digit-text'),
+        leafBottom: cardEl.querySelector('.leaf.bottom .digit-text'),
+        current: null,
+        timer: null
+      });
+    }
+    return cards;
+  }
+
+  // Updates a single digit card, animating a flip only when the digit actually changes.
+  function setCard(card, digit){
+    if(card.current === digit) return;
+
+    if(card.current === null){
+      // first paint — no animation
+      card.faceTop.textContent = digit;
+      card.faceBottom.textContent = digit;
+      card.leafTop.textContent = digit;
+      card.leafBottom.textContent = digit;
+      card.current = digit;
+      return;
+    }
+
+    // Reveal layers get the new digit immediately (hidden behind the flying leaf
+    // until it's out of the way); the top leaf keeps showing the OLD digit while
+    // it flies, so the motion reads correctly.
+    card.faceTop.textContent = digit;
+    card.faceBottom.textContent = digit;
+    card.leafBottom.textContent = digit;
+    card.el.classList.add('flipping');
+
+    clearTimeout(card.timer);
+    card.timer = setTimeout(() => {
+      card.leafTop.textContent = digit;
+      card.el.classList.add('no-transition');
+      card.el.classList.remove('flipping');
+      void card.el.offsetWidth; // force reflow so the snap-back is instant, not animated
+      card.el.classList.remove('no-transition');
+      card.current = digit;
+    }, 360);
+  }
+
+  function updateUnit(cards, valueStr){
+    setCard(cards[0], valueStr[0]);
+    setCard(cards[1], valueStr[1]);
+  }
+
+  const dayCards = createDigitCards('grp-days', 2);
+  const hrCards  = createDigitCards('grp-hrs', 2);
+  const minCards = createDigitCards('grp-min', 2);
+  const secCards = createDigitCards('grp-sec', 2);
+
   function render(){
     const now = new Date();
     const diff = TARGET - now;
@@ -267,9 +464,9 @@
       document.querySelector('.route').style.display = 'none';
       document.querySelector('h1').style.display = 'none';
       document.querySelector('.subline').style.display = 'none';
+      document.querySelector('.clocks').style.display = 'none';
       document.getElementById('manifest').style.display = 'none';
-      status.style.display = 'none';
-      boardWrap.innerHTML = `<div class="arrived"><h1>Touchdown. <em>She's there.</em></h1><div class="subline">Welcome to Singapore.</div></div>`;
+      boardWrap.innerHTML = '<div class="arrived"><h1>Touchdown. <em>She\u2019s there.</em></h1><div class="subline">Welcome to Singapore.</div></div>';
       return;
     }
 
@@ -279,30 +476,28 @@
     const mins = Math.floor((totalSec % 3600) / 60);
     const secs = totalSec % 60;
 
-    dEl.textContent = pad(days);
-    hEl.textContent = pad(hrs);
-    mEl.textContent = pad(mins);
-    sEl.textContent = pad(secs);
+    updateUnit(dayCards, pad(days));
+    updateUnit(hrCards, pad(hrs));
+    updateUnit(minCards, pad(mins));
+    updateUnit(secCards, pad(secs));
 
     mDays.textContent = fmt(days);
     mSleeps.textContent = fmt(calendarDayGap(now, TARGET));
     mSundays.textContent = fmt(countSundays(now, TARGET));
+    mHours.textContent = fmt(Math.floor(diff / 3600000));
     mMinutes.textContent = fmt(Math.floor(diff / 60000));
     mSeconds.textContent = fmt(totalSec);
 
-    // brief gold flash on the seconds flap each tick
-    sEl.classList.add('tick');
-    setTimeout(()=>sEl.classList.remove('tick'), 250);
+    clockLon.textContent = cityTime('Europe/London');
+    clockSin.textContent = cityTime('Asia/Singapore');
+    clockLonMeta.textContent = londonTzAbbr() + ' · ' + cityDate('Europe/London');
+    clockSinMeta.textContent = 'SGT · ' + cityDate('Asia/Singapore');
 
     // plane position along the route, based on elapsed time since START
     const totalSpan = TARGET - START;
     const elapsed = now - START;
     const pct = Math.min(100, Math.max(0, (elapsed/totalSpan)*100));
     plane.style.left = pct + '%';
-
-    if(days === 0) status.textContent = 'STATUS: FINAL APPROACH';
-    else if(days <= 3) status.textContent = 'STATUS: BOARDING SOON';
-    else status.textContent = 'STATUS: SCHEDULED';
   }
 
   render();
