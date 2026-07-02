@@ -431,17 +431,22 @@
       return;
     }
 
-    // Reveal layers get the new digit immediately (hidden behind the flying leaf
-    // until it's out of the way); the top leaf keeps showing the OLD digit while
-    // it flies, so the motion reads correctly.
+    // Reveal layers get the new digit only once something is actually covering
+    // them: faceTop is safe immediately, since leafTop (opaque, still showing
+    // the OLD digit) covers it for virtually its whole flight. leafBottom is
+    // safe immediately too, since it doesn't start rotating into view until
+    // its 0.11s delay elapses. faceBottom must NOT change yet — leafBottom is
+    // edge-on (invisible) for that first 0.11s, so an early update there would
+    // leak the new digit through before any visible motion happens. It's set
+    // in the cleanup below instead, once leafBottom has finished covering it.
     card.faceTop.textContent = digit;
-    card.faceBottom.textContent = digit;
     card.leafBottom.textContent = digit;
     card.el.classList.add('flipping');
 
     clearTimeout(card.timer);
     card.timer = setTimeout(() => {
       card.leafTop.textContent = digit;
+      card.faceBottom.textContent = digit;
       card.el.classList.add('no-transition');
       card.el.classList.remove('flipping');
       void card.el.offsetWidth; // force reflow so the snap-back is instant, not animated
